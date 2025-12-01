@@ -18,5 +18,8 @@
     "url": "https://github.com/PhilippAubert/task-tracker/issues"
   },
   "homepage": "https://github.com/PhilippAubert/task-tracker#readme",
-  "type":"module"
+  "type": "module",
+  "dependencies": {
+    "nodemon": "^3.1.11"
+  }
 }

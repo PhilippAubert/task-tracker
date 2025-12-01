@@ -67,9 +67,9 @@ const addTask = async (task) => {
 
         const duplicates = allTasks.filter((todo) => todo.description === task.description);
         
-        if (!allTasks || allTasks.length === 0) {
+        if (!allTasks && allTasks.length === 0) {
             const newFile = await createTaskFile();
-            return newFile ? "File created successfully" : "Failed to create file!"
+            return newFile ?? "Failed to create file!";
         } else if (duplicates.length > 0) {
             return "This task already exists!";
         } else {
@@ -100,10 +100,34 @@ const startApp = () => {
                 process.stdout.write(`${taskAdded}\n`);
                 break;
             case "delete":
-                
+                const allTasks = await getTasks();
+
+                const filteredTasks = allTasks.filter(task => task.id !== Number(inputDescription));
+                const filteredTask = allTasks.filter(task => task.id === Number(inputDescription));
+                const allTaskIds = allTasks.map((task) => {return task.id})
+
+                if (filteredTasks.length === 0) {
+                    process.stdout.write("Todo list is empty! \n" );
+                } else if (!allTaskIds.includes(Number(inputDescription))) {
+                    process.stdout.write("This id does not exist! \n")
+                } else {
+                    try {
+                        await writeFile("./tasks.txt", JSON.stringify(filteredTasks, null, 2), "utf-8");
+                        process.stdout.write(`${filteredTask[0].description} deleted succesfully \n`);
+                    } catch (e) {
+                        process.stderr.write(e);
+                    }
+                }
+
+                ///wir brauchen process.argv! 
+                // checken ob es eine nummer ist! 
+                // dann filter aller tasks nach id! 
+                // gefilterter array mit writeFile! Das ganze file überschreiben... 
                 break;
             case "update":
                 break
+            case "exit":
+                process.exit(1);
             default: 
                 console.log("Enter something valid please!")
         }
