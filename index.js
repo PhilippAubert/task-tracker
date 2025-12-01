@@ -3,10 +3,6 @@
  * TEST THE FILE SYSTEM!
  * Read/Write File! 
  * 
-
- * # Updating and deleting task
- * task-cli update 1 "Buy groceries and cook dinner"
- * 
  * # Marking a task as in progress or done
  * task-cli mark-in-progress 1
  * task-cli mark-done 1
@@ -170,6 +166,20 @@ const startApp = () => {
                 const taskUpdated = await updateTask(numericId, updateValue);
                 process.stdout.write(`update log: ${taskUpdated}\n`);
                 break;
+            } case "mark-in-progress": {
+                const idString = tokens[1];
+                const numericId = Number(idString);
+                if (isNaN(numericId)) {
+                    process.stdout.write("Please provide a valid numeric id to update.\n");
+                    break;
+                }
+            } case "mark-done": {
+                const idString = tokens[1];
+                const numericId = Number(idString);
+                if (isNaN(numericId)) {
+                    process.stdout.write("Please provide a valid numeric id to update.\n");
+                    break;
+                }
             }
 
             case "exit": {
