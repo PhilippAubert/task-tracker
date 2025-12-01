@@ -1,23 +1,10 @@
 /**
- * 
- * TEST THE FILE SYSTEM!
- * Read/Write File! 
- * 
- * # Marking a task as in progress or done
- * task-cli mark-in-progress 1
- * task-cli mark-done 1
- * 
- * # Listing all tasks
- * task-cli list
- * 
- * # Listing tasks by status
  * task-cli list done
  * task-cli list todo
  * task-cli list in-progress
- */
+*/
 
 import {readFile, writeFile} from "node:fs/promises";
-
 
 const getTasks = async () => {
     try {
@@ -27,6 +14,14 @@ const getTasks = async () => {
         return [];
     }
 };
+
+const findIndexOfTask = async (input) => {
+    const allTasks = await getTasks();
+    const index = allTasks.findIndex(task => task.id === numericInput);
+    if (index === -1) {
+        return "no such id in the list";
+    }
+}
 
 const createFile = async () => {
     try {
@@ -38,6 +33,21 @@ const createFile = async () => {
     }
 };
 
+const handleOverride = async (updatedTasks) => {
+    try {
+        await writeFile("./tasks.txt", JSON.stringify(updatedTasks, null, 2), "utf-8");
+    } catch (e) {
+        process.stderr.write(e);
+    }
+}
+
+
+const validateIdInput = (numericId) => {
+    if (isNaN(numericId)) {
+        process.stdout.write("Please provide a valid numeric id to delete.\n");
+        return false;
+    }
+}
 
 const addTask = async (task) => {
     try {
@@ -66,18 +76,8 @@ const addTask = async (task) => {
     }
 };
 
-
-const handleOverride = async (updatedTasks) => {
-    try {
-        await writeFile("./tasks.txt", JSON.stringify(updatedTasks, null, 2), "utf-8");
-    } catch (e) {
-        process.stderr.write(e);
-    }
-}
-
 const deleteTask = async (inputDescription) => {
     const numericInput = Number(inputDescription);
-
     const allTasks = await getTasks();
 
     const filteredTasks = allTasks.filter(task => task.id !== numericInput);
@@ -95,14 +95,8 @@ const deleteTask = async (inputDescription) => {
 };
 
 const updateTask = async (inputDescription, updateValue) => {
-    const numericInput = Number(inputDescription);
     const allTasks = await getTasks();
-    const index = allTasks.findIndex(task => task.id === numericInput);
-
-    if (index === -1) {
-      return "no such id in the list";
-    }
-  
+    const index = findIndexOfTask(Number(inputDescription));
     const oldTask = allTasks[index];
     const updatedTask = {
       ...oldTask,
@@ -117,8 +111,38 @@ const updateTask = async (inputDescription, updateValue) => {
     } catch {
         process.stdout.write("failed to update!")
     }
-    
 }
+
+
+const updateTaskByStatus = async (inputDescription, updateValue) => {
+    const allTasks = await getTasks();
+    const index = findIndexOfTodo(Number(inputDescription));
+    const oldTask = allTasks[index];
+    const updatedTask = {
+      ...oldTask,
+      status: updateValue
+    };
+    
+    allTasks[index] = updatedTask;
+  
+    try {
+        await handleOverride(allTasks);
+        return `Task ${updatedTask.id} set to ${updatedTask.status}`
+    } catch {
+        process.stdout.write("failed to update!")
+    }
+}
+
+const listTasksByStatus = async (description) => {
+    const allItems = await getTasks();
+    const filteredTasks = allItems.filter(task => task.status === description);
+    if (filteredTasks.length === 0) {
+        return `No tasks by ${description}`;
+    }
+    
+    return filteredTasks;
+}
+
 
 const startApp = () => {
     process.stdin.setEncoding("utf-8");
@@ -129,10 +153,12 @@ const startApp = () => {
 
         const tokens = input.split(" ");
         const inputType = tokens[0];
+        const description = tokens.slice(1).join(" ");
+        const idString = tokens[1];
+        const numericId = Number(idString);
 
         switch (inputType) {
             case "add": {
-                const description = tokens.slice(1).join(" ");
                 if (!description) {
                     process.stdout.write("Please provide a task description.\n");
                     break;
@@ -144,44 +170,46 @@ const startApp = () => {
             }
 
             case "delete": {
-                const idString = tokens[1];
-                const numericId = Number(idString);
-                if (isNaN(numericId)) {
-                    process.stdout.write("Please provide a valid numeric id to delete.\n");
-                    break;
+                const isValid = validateIdInput(numericId);
+                if (!isValid) {
+                    const taskDeleted = await deleteTask(numericId);
+                    process.stdout.write(`${taskDeleted}\n`);
                 }
-                const taskDeleted = await deleteTask(numericId);
-                process.stdout.write(`${taskDeleted}\n`);
                 break;
             }
-
             case "update": {
-                const idString = tokens[1];
-                const numericId = Number(idString);
-                if (isNaN(numericId)) {
-                    process.stdout.write("Please provide a valid numeric id to update.\n");
-                    break;
+                const isValid = validateIdInput(numericId);
+                if (!isValid) {
+                    const updateValue = tokens.slice(2).join(" ");
+                    const taskUpdated = await updateTask(numericId, updateValue);
+                    process.stdout.write(`${taskUpdated}\n`);
                 }
-                const updateValue = tokens.slice(2).join(" ");
-                const taskUpdated = await updateTask(numericId, updateValue);
-                process.stdout.write(`update log: ${taskUpdated}\n`);
                 break;
             } case "mark-in-progress": {
-                const idString = tokens[1];
-                const numericId = Number(idString);
-                if (isNaN(numericId)) {
-                    process.stdout.write("Please provide a valid numeric id to update.\n");
-                    break;
+                const isValid = validateIdInput(numericId);
+                if (!isValid) {
+                    const updateValue = "in progress"
+                    const taskInProgress = await updateTaskByStatus(numericId, updateValue);
+                    process.stdout.write(`${taskInProgress}\n`);
                 }
+                break;
             } case "mark-done": {
-                const idString = tokens[1];
-                const numericId = Number(idString);
-                if (isNaN(numericId)) {
-                    process.stdout.write("Please provide a valid numeric id to update.\n");
-                    break;
+                const isValid = validateIdInput(numericId);
+                if (!isValid) {
+                    const updateValue = "done"
+                    const taskDone = await updateTaskByStatus(numericId, updateValue);
+                    process.stdout.write(`${taskDone}\n`);
                 }
+                break;
             }
-
+            case "list" : {
+                if (description !== "done" && description !== "todo" && description !== "in-progress") {
+                    process.stdout.write("enter a valid input for listing!")
+                }
+                const list = await listTasksByStatus(description);
+                process.stdout.write(`all tasks marked as "${description}": ${Object.entries(list[0])}\n`)
+                break;
+            }
             case "exit": {
                 process.stdout.write("Thank you for using our app...\n");
                 process.exit(0);
