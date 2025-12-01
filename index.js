@@ -1,9 +1,3 @@
-/**
- * task-cli list done
- * task-cli list todo
- * task-cli list in-progress
-*/
-
 import {readFile, writeFile} from "node:fs/promises";
 
 const getTasks = async () => {
