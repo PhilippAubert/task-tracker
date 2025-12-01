@@ -81,6 +81,7 @@ const handleOverride = async (updatedTasks) => {
 
 const deleteTask = async (inputDescription) => {
     const numericInput = Number(inputDescription);
+
     const allTasks = await getTasks();
 
     const filteredTasks = allTasks.filter(task => task.id !== numericInput);
@@ -97,35 +98,90 @@ const deleteTask = async (inputDescription) => {
     }
 };
 
+const updateTask = async (inputDescription, updateValue) => {
+    const numericInput = Number(inputDescription);
+    const allTasks = await getTasks();
+    const index = allTasks.findIndex(task => task.id === numericInput);
+
+    if (index === -1) {
+      return "no such id in the list";
+    }
+  
+    const oldTask = allTasks[index];
+    const updatedTask = {
+      ...oldTask,
+      description: updateValue
+    };
+    
+    allTasks[index] = updatedTask;
+  
+    try {
+        await handleOverride(allTasks);
+        return `Task ${updatedTask.id} updated successfully!`
+    } catch {
+        process.stdout.write("failed to update!")
+    }
+    
+}
+
 const startApp = () => {
     process.stdin.setEncoding("utf-8");
-    process.stdin.on("data", async (data) => {
-        const input = data.toString().split(" ");
-        const inputType = input[0];
-        const inputDescription = input.slice(1).join(" ");
 
-        switch(inputType) {
-            case "add":
-                const task = {
-                    description: inputDescription,
-                    status: "todo"
-                };
+    process.stdin.on("data", async (data) => {
+        const input = data.toString().trim();
+        if (!input) return;
+
+        const tokens = input.split(" ");
+        const inputType = tokens[0];
+
+        switch (inputType) {
+            case "add": {
+                const description = tokens.slice(1).join(" ");
+                if (!description) {
+                    process.stdout.write("Please provide a task description.\n");
+                    break;
+                }
+                const task = { description, status: "todo" };
                 const taskAdded = await addTask(task);
                 process.stdout.write(`${taskAdded}\n`);
                 break;
-            case "delete":
-                const taskDeleted = await deleteTask(inputDescription)
+            }
+
+            case "delete": {
+                const idString = tokens[1];
+                const numericId = Number(idString);
+                if (isNaN(numericId)) {
+                    process.stdout.write("Please provide a valid numeric id to delete.\n");
+                    break;
+                }
+                const taskDeleted = await deleteTask(numericId);
                 process.stdout.write(`${taskDeleted}\n`);
                 break;
-            case "update":
-                
-                break
-            case "exit":
-                process.exit(1);
-            default: 
-                console.log("Enter something valid please!")
+            }
+
+            case "update": {
+                const idString = tokens[1];
+                const numericId = Number(idString);
+                if (isNaN(numericId)) {
+                    process.stdout.write("Please provide a valid numeric id to update.\n");
+                    break;
+                }
+                const updateValue = tokens.slice(2).join(" ");
+                const taskUpdated = await updateTask(numericId, updateValue);
+                process.stdout.write(`update log: ${taskUpdated}\n`);
+                break;
+            }
+
+            case "exit": {
+                process.stdout.write("Thank you for using our app...\n");
+                process.exit(0);
+            }
+
+            default: {
+                process.stdout.write("Enter a valid command: add, delete, update, exit.\n");
+            }
         }
-    })
-}
+    });
+};
 
 startApp();
