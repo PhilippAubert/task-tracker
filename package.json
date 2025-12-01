@@ -1,0 +1,21 @@
+{
+  "name": "task-tracker",
+  "version": "1.0.0",
+  "description": "Based on https://roadmap.sh/projects/task-tracker",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "task-cli": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PhilippAubert/task-tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PhilippAubert/task-tracker/issues"
+  },
+  "homepage": "https://github.com/PhilippAubert/task-tracker#readme"
+}
