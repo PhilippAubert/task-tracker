@@ -3,14 +3,9 @@
  * TEST THE FILE SYSTEM!
  * Read/Write File! 
  * 
- * 
- * # Adding a new task
- * task-cli add "Buy groceries"
- * # Output: Task added successfully (ID: 1)
- * 
+
  * # Updating and deleting task
  * task-cli update 1 "Buy groceries and cook dinner"
- * task-cli delete 1
  * 
  * # Marking a task as in progress or done
  * task-cli mark-in-progress 1
@@ -25,7 +20,7 @@
  * task-cli list in-progress
  */
 
-import {readFile, writeFile, appendFile} from "node:fs/promises";
+import {readFile, writeFile} from "node:fs/promises";
 
 
 const getTasks = async () => {
@@ -76,9 +71,9 @@ const addTask = async (task) => {
 };
 
 
-const handleOverride = async (filteredTasks) => {
+const handleOverride = async (updatedTasks) => {
     try {
-        await writeFile("./tasks.txt", JSON.stringify(filteredTasks, null, 2), "utf-8");
+        await writeFile("./tasks.txt", JSON.stringify(updatedTasks, null, 2), "utf-8");
     } catch (e) {
         process.stderr.write(e);
     }
@@ -123,6 +118,7 @@ const startApp = () => {
                 process.stdout.write(`${taskDeleted}\n`);
                 break;
             case "update":
+                
                 break
             case "exit":
                 process.exit(1);
