@@ -116,7 +116,7 @@ const updateTask = async (inputDescription, updateValue) => {
 
 const updateTaskByStatus = async (inputDescription, updateValue) => {
     const allTasks = await getTasks();
-    const index = findIndexOfTodo(Number(inputDescription));
+    const index = findIndexOfTask(Number(inputDescription));
     const oldTask = allTasks[index];
     const updatedTask = {
       ...oldTask,
@@ -139,8 +139,18 @@ const listTasksByStatus = async (description) => {
     if (filteredTasks.length === 0) {
         return `No tasks by ${description}`;
     }
-    
-    return filteredTasks;
+
+    const aggregateTasks = (filteredTasks) => {
+        let arr = [];
+        filteredTasks.forEach(task => arr.push(task.description));
+        return arr;
+    }
+
+    const aggregatedTasks = aggregateTasks(filteredTasks);
+    return {
+        status: description,
+        tasks: aggregatedTasks,
+    }
 }
 
 
@@ -207,7 +217,7 @@ const startApp = () => {
                     process.stdout.write("enter a valid input for listing!")
                 }
                 const list = await listTasksByStatus(description);
-                process.stdout.write(`all tasks marked as "${description}": ${Object.entries(list[0])}\n`)
+                process.stdout.write(`Tasks set to ${list.status}:\n ${list.tasks}`)
                 break;
             }
             case "exit": {
