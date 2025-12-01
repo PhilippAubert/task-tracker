@@ -106,14 +106,14 @@ const startApp = () => {
                 const filteredTask = allTasks.filter(task => task.id === Number(inputDescription));
                 const allTaskIds = allTasks.map((task) => {return task.id})
 
-                if (filteredTasks.length === 0) {
+                if (filteredTasks.length === 0 && !filteredTask.length > 0) {
                     process.stdout.write("Todo list is empty! \n" );
                 } else if (!allTaskIds.includes(Number(inputDescription))) {
                     process.stdout.write("This id does not exist! \n")
                 } else {
                     try {
                         await writeFile("./tasks.txt", JSON.stringify(filteredTasks, null, 2), "utf-8");
-                        process.stdout.write(`${filteredTask[0].description} deleted succesfully \n`);
+                        process.stdout.write(`Deleted Task ${filteredTask[0].description} \n`);
                     } catch (e) {
                         process.stderr.write(e);
                     }
