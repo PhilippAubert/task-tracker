@@ -37,25 +37,12 @@ const getTasks = async () => {
     }
 };
 
-const createTaskFile = async () => {
+const createFile = async () => {
     try {
         await writeFile("./tasks.txt", JSON.stringify([], null, 2), "utf-8");
         return "File created successfully!";
     } catch (e) {
         console.error(e, " when writing file");
-        return null;
-    }
-};
-
-const appendTaskToFile = async (task) => {
-    try {
-        const tasks = await getTasks();
-        task.id = tasks.length + 1;
-        tasks.push(task);
-        await writeFile("./tasks.txt", JSON.stringify(tasks, null, 2), "utf-8");
-        return `Task ${task.id} appended successfully!`;
-    } catch (e) {
-        console.error(e, " when appending file!");
         return null;
     }
 };
@@ -68,13 +55,19 @@ const addTask = async (task) => {
         const duplicates = allTasks.filter((todo) => todo.description === task.description);
         
         if (!allTasks && allTasks.length === 0) {
-            const newFile = await createTaskFile();
+            const newFile = await createFile();
             return newFile ?? "Failed to create file!";
         } else if (duplicates.length > 0) {
             return "This task already exists!";
         } else {
-            const isAdded = await appendTaskToFile(task);
-            return isAdded;
+            if (allTasks.length === 0) {
+                task.id = 1;
+            } else {
+                task.id = Number(allTasks[allTasks.length - 1].id) + 1;
+            }
+            allTasks.push(task);
+            await handleOverride(allTasks);
+            return `Task ${task.id} appended successfully!`;
         }
     } catch (err) {
         console.error(err);
@@ -82,6 +75,32 @@ const addTask = async (task) => {
     }
 };
 
+
+const handleOverride = async (filteredTasks) => {
+    try {
+        await writeFile("./tasks.txt", JSON.stringify(filteredTasks, null, 2), "utf-8");
+    } catch (e) {
+        process.stderr.write(e);
+    }
+}
+
+const deleteTask = async (inputDescription) => {
+    const numericInput = Number(inputDescription);
+    const allTasks = await getTasks();
+
+    const filteredTasks = allTasks.filter(task => task.id !== numericInput);
+    const filteredTask = allTasks.filter(task => task.id === numericInput);
+    const allTaskIds = allTasks.map((task) => {return task.id})
+    
+    if (filteredTasks.length === 0 && !filteredTask.length > 0) {
+       return "Todo list is empty! \n";
+    } else if (!allTaskIds.includes(numericInput)) {
+        return "This id does not exist! \n";
+    } else {
+        await handleOverride(filteredTasks);
+        return `Deleted Task ${filteredTask[0].description} \n`;
+    }
+};
 
 const startApp = () => {
     process.stdin.setEncoding("utf-8");
@@ -100,29 +119,8 @@ const startApp = () => {
                 process.stdout.write(`${taskAdded}\n`);
                 break;
             case "delete":
-                const allTasks = await getTasks();
-
-                const filteredTasks = allTasks.filter(task => task.id !== Number(inputDescription));
-                const filteredTask = allTasks.filter(task => task.id === Number(inputDescription));
-                const allTaskIds = allTasks.map((task) => {return task.id})
-
-                if (filteredTasks.length === 0 && !filteredTask.length > 0) {
-                    process.stdout.write("Todo list is empty! \n" );
-                } else if (!allTaskIds.includes(Number(inputDescription))) {
-                    process.stdout.write("This id does not exist! \n")
-                } else {
-                    try {
-                        await writeFile("./tasks.txt", JSON.stringify(filteredTasks, null, 2), "utf-8");
-                        process.stdout.write(`Deleted Task ${filteredTask[0].description} \n`);
-                    } catch (e) {
-                        process.stderr.write(e);
-                    }
-                }
-
-                ///wir brauchen process.argv! 
-                // checken ob es eine nummer ist! 
-                // dann filter aller tasks nach id! 
-                // gefilterter array mit writeFile! Das ganze file überschreiben... 
+                const taskDeleted = await deleteTask(inputDescription)
+                process.stdout.write(`${taskDeleted}\n`);
                 break;
             case "update":
                 break
